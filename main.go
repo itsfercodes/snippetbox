@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 func home(w http.ResponseWriter, r *http.Request) {
@@ -10,7 +12,14 @@ func home(w http.ResponseWriter, r *http.Request) {
 }
 
 func snippetView(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Showing some snippet"))
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	msg := fmt.Sprintf("Display a specific snippet with ID %d...", id)
+	w.Write([]byte(msg))
 }
 
 func snippetCreate(w http.ResponseWriter, r *http.Request) {
@@ -18,11 +27,12 @@ func snippetCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	// A ServeMux is a router
 	mux := http.NewServeMux()
 
 	// All unknown routes will lead to the "/" route if "{$}" is not added
 	mux.HandleFunc("/{$}", home) // Restrict this route to exact matches on / only.
-	mux.HandleFunc("/snippet/view", snippetView)
+	mux.HandleFunc("/snippet/view/{id}", snippetView)
 	mux.HandleFunc("/snippet/create", snippetCreate)
 
 	log.Print("starting server on :4000")
